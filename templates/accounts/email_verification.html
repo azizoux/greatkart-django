@@ -1,0 +1,11 @@
+{% autoescape off %}
+
+Bonjour {{user.first_name}}.
+
+Merci de cliquer sur le lien ci-dessous pour activer et finaliser votre
+inscription sur ToumaiMarket.
+http://{{domain}}{% url 'activate' uidb64=uid token=token %}
+
+Si vous pensez que ce n'est pas vous, merci d'ignorer cet email.
+
+{% endautoescape %}
