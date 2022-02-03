@@ -125,4 +125,34 @@ def forgot_password(request):
 
 
 def reset_password(request, uidb64, token):
-    return HttpResponse(uidb64+'......'+token)
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid'] = uid
+        messages.success(request, 'Merci de reinitialiser votre mot de passe.')
+        return redirect('new_password')
+    else:
+        messages.error(request, "Ce lien est expiré, elle n'est plus valide")
+        return redirect('login')
+
+
+def new_password(request):
+    if request.method == 'POST':
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+        if password == confirm_password:
+            uid = request.session['uid']
+            user = Account.objects.get(pk=uid)
+            user.set_password(password)
+            user.save()
+            messages.success(request, "Votre mot de passe vient d'etre initialisé")
+            return redirect('login')
+        else:
+            messages.error(request, 'Les mots de passes saisis ne correspondent pas.')
+            return redirect('new_password')
+    else:
+        return render(request, 'accounts/new_password.html')
